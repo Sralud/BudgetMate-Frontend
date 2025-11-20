@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -11,15 +11,18 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const router = useRouter();
+  
   const handleLogin = () => {
     console.log('Username:', username);
     console.log('Password:', password);
     console.log('Remember Me:', rememberMe);
+    router.replace("/(tabs)/home");
   };
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="light"/>
 
       <View style={styles.upper}>
         <Text style={styles.big}>Sign in to your{'\n'}Account</Text>
@@ -103,7 +106,11 @@ const Login = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <TouchableOpacity
+          style={[styles.button, (!username || !password) && { opacity: 0.5 }]}
+          onPress={handleLogin}
+          disabled={!username || !password}
+        >
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
 

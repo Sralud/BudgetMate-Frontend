@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 
 const SignUp = () => {
   const [username, setUsername] = useState('');
@@ -13,11 +13,66 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Error states
+  const [usernameError, setUsernameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
+  const router = useRouter();
+
   const handleSignUp = () => {
+  let valid = true;
+
+  // Username
+  if (!username.trim()) {
+    setUsernameError('Username is required');
+    valid = false;
+  } else {
+    setUsernameError('');
+  }
+
+  // Email
+  if (!email.trim()) {
+    setEmailError('Email is required');
+    valid = false;
+  } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+    setEmailError('Enter a valid email address');
+    valid = false;
+  } else {
+    setEmailError('');
+  }
+
+
+  // Password
+  if (!password.trim()) {
+    setPasswordError('Password is required');
+    valid = false;
+  } else if (password.length < 6) { // minimum length
+    setPasswordError('Password must be at least 6 characters');
+    valid = false;
+  } else {
+    setPasswordError('');
+  }
+
+  // Confirm Password
+  if (!confirmPassword.trim()) {
+    setConfirmPasswordError('Confirm your password');
+    valid = false;
+  } else if (password !== confirmPassword) {
+    setConfirmPasswordError('Passwords do not match');
+    valid = false;
+  } else {
+    setConfirmPasswordError('');
+  }
+
+  if (!valid) return;
+
     console.log('Username:', username);
     console.log('Email:', email);
     console.log('Password:', password);
-    console.log('Confirm Password:', confirmPassword);
+
+    router.replace("/(tabs)/home");
   };
 
   return (
@@ -45,6 +100,7 @@ const SignUp = () => {
           onChangeText={setUsername}
           value={username}
         />
+        {usernameError ? <Text style={styles.error}>{usernameError}</Text> : null}
 
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -54,6 +110,7 @@ const SignUp = () => {
           onChangeText={setEmail}
           value={email}
         />
+        {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
         <Text style={styles.label}>Password</Text>
         <View>
@@ -75,6 +132,7 @@ const SignUp = () => {
             />
           </TouchableOpacity>
         </View>
+        {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
 
         <Text style={styles.label}>Confirm Password</Text>
         <View>
@@ -96,14 +154,21 @@ const SignUp = () => {
             />
           </TouchableOpacity>
         </View>
+        {confirmPasswordError ? <Text style={styles.error}>{confirmPasswordError}</Text> : null}
 
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            console.log("Sign Up Button Pressed");
+            handleSignUp();
+          }}
+        >
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
 
         <Text style={styles.signup}>
           Already have an account?
-          <Link style={styles.signUpLink} href="/Login"> Log in</Link>
+          <Link style={styles.signUpLink} href="/"> Log in</Link>
         </Text>
 
         <View style={styles.orContainer}>
@@ -117,7 +182,7 @@ const SignUp = () => {
               source={require('../assets/images/googlelogo.png')}
               style={{ width: 25, height: 25 }}
             />
-            <Text style={styles.googleText}>Sign up with Google</Text>
+            <Text style={styles.googleText}>Google</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -214,6 +279,12 @@ const styles = StyleSheet.create({
     color: '#fff', 
     fontWeight: '600', 
     fontSize: 16 
+  },
+
+  error: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 5,
   },
 
   signup: { 
