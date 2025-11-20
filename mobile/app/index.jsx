@@ -4,20 +4,43 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Link, useRouter } from "expo-router";
+import { api } from "../src/api";
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState('');   // this is actually email
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
   
-  const handleLogin = () => {
-    console.log('Username:', username);
-    console.log('Password:', password);
-    console.log('Remember Me:', rememberMe);
-    router.replace("/(tabs)/home");
+  const handleLogin = async () => {
+    if (!username || !password) return;
+
+    setLoading(true);
+    try {
+      const response = await api.post("/auth/login", {
+        email: username,
+        password: password,
+      });
+
+      const { token, user } = response.data;
+
+      // Store token (basic approach)
+      global.authToken = token;
+
+      console.log("Logged in user:", user);
+      console.log("Remember Me:", rememberMe);
+
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      console.log("Login error:", error?.response?.data || error.message);
+      const message = error?.response?.data?.message || "Login failed";
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -107,11 +130,13 @@ const Login = () => {
         </View>
 
         <TouchableOpacity
-          style={[styles.button, (!username || !password) && { opacity: 0.5 }]}
+          style={[styles.button, (!username || !password || loading) && { opacity: 0.5 }]}
           onPress={handleLogin}
-          disabled={!username || !password}
+          disabled={!username || !password || loading}
         >
-          <Text style={styles.buttonText}>Login</Text>
+          <Text style={styles.buttonText}>
+            {loading ? "Logging in..." : "Login"}
+          </Text>
         </TouchableOpacity>
 
         <Text style={styles.signup}>

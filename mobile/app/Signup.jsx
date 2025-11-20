@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
+import { api } from "../src/api";
 
 const SignUp = () => {
   const [username, setUsername] = useState('');
@@ -12,6 +13,7 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Error states
   const [usernameError, setUsernameError] = useState('');
@@ -22,58 +24,77 @@ const SignUp = () => {
   const router = useRouter();
 
   const handleSignUp = () => {
-  let valid = true;
+    let valid = true;
 
-  // Username
-  if (!username.trim()) {
-    setUsernameError('Username is required');
-    valid = false;
-  } else {
-    setUsernameError('');
-  }
+    // Username
+    if (!username.trim()) {
+      setUsernameError('Username is required');
+      valid = false;
+    } else {
+      setUsernameError('');
+    }
 
-  // Email
-  if (!email.trim()) {
-    setEmailError('Email is required');
-    valid = false;
-  } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-    setEmailError('Enter a valid email address');
-    valid = false;
-  } else {
-    setEmailError('');
-  }
+    // Email
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      valid = false;
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setEmailError('Enter a valid email address');
+      valid = false;
+    } else {
+      setEmailError('');
+    }
 
+    // Password
+    if (!password.trim()) {
+      setPasswordError('Password is required');
+      valid = false;
+    } else if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
 
-  // Password
-  if (!password.trim()) {
-    setPasswordError('Password is required');
-    valid = false;
-  } else if (password.length < 6) { // minimum length
-    setPasswordError('Password must be at least 6 characters');
-    valid = false;
-  } else {
-    setPasswordError('');
-  }
+    // Confirm Password
+    if (!confirmPassword.trim()) {
+      setConfirmPasswordError('Confirm your password');
+      valid = false;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match');
+      valid = false;
+    } else {
+      setConfirmPasswordError('');
+    }
 
-  // Confirm Password
-  if (!confirmPassword.trim()) {
-    setConfirmPasswordError('Confirm your password');
-    valid = false;
-  } else if (password !== confirmPassword) {
-    setConfirmPasswordError('Passwords do not match');
-    valid = false;
-  } else {
-    setConfirmPasswordError('');
-  }
+    if (!valid || loading) return;
 
-  if (!valid) return;
+    const doSignup = async () => {
+      setLoading(true);
+      try {
+        const response = await api.post("/auth/signup", {
+          username: username,
+          email: email,
+          password: password,
+        });
 
-    console.log('Username:', username);
-    console.log('Email:', email);
-    console.log('Password:', password);
+        const { token, user } = response.data;
 
-    // After successful sign up, go to onboarding to collect budget details
-    router.replace('/BudgetOnboarding');
+        global.authToken = token;
+
+        console.log("Signed up user:", user);
+
+        router.replace("/(tabs)/home");
+      } catch (error) {
+        console.log("Signup error:", error?.response?.data || error.message);
+        const message = error?.response?.data?.message || "Signup failed";
+        alert(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    doSignup();
   };
 
   return (
@@ -158,13 +179,13 @@ const SignUp = () => {
         {confirmPasswordError ? <Text style={styles.error}>{confirmPasswordError}</Text> : null}
 
         <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            console.log("Sign Up Button Pressed");
-            handleSignUp();
-          }}
+          style={[styles.button, loading && { opacity: 0.5 }]}
+          onPress={handleSignUp}
+          disabled={loading}
         >
-          <Text style={styles.buttonText}>Sign Up</Text>
+          <Text style={styles.buttonText}>
+            {loading ? "Signing up..." : "Sign Up"}
+          </Text>
         </TouchableOpacity>
 
         <Text style={styles.signup}>
