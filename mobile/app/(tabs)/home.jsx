@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { scale, verticalScale, moderateScale, screenWidth } from '../../src/responsive';
 
 const COLORS = {
@@ -24,6 +25,7 @@ const Home = () => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [username, setUsername] = useState('Jo');
   const carouselRef = useRef(null);
+  const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +65,10 @@ const Home = () => {
     }
   };
 
+  const goToOnboarding = () => {
+    router.push('/BudgetOnboarding');
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -73,10 +79,33 @@ const Home = () => {
 
   if (!budgetData) {
     return (
-      <View style={[styles.container, styles.center]}>
-        <Text style={styles.text}>No budget data found.</Text>
-        <Text style={styles.subtext}>Please complete the onboarding first.</Text>
-      </View>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <StatusBar style="light" backgroundColor={COLORS.background} translucent={false} />
+        <View style={[styles.container, styles.center]}>
+          <MaterialIcons name="account-balance-wallet" size={moderateScale(80)} color={COLORS.yellow} />
+          <Text style={styles.noBudgetTitle}>No Budget Data Found</Text>
+          <Text style={styles.noBudgetText}>
+            Let's set up your budget to start tracking your finances!
+          </Text>
+          
+          <TouchableOpacity 
+            style={styles.onboardingButtonWrapper}
+            onPress={goToOnboarding}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#E3823C', '#E33C3C']}
+              locations={[0.1, 0.95]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.onboardingButton}
+            >
+              <Text style={styles.onboardingButtonText}>Setup Budget</Text>
+              <MaterialIcons name="arrow-forward" size={moderateScale(20)} color={COLORS.text} />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -123,6 +152,11 @@ const Home = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            <LinearGradient
+              colors={['#433DA3', '#2B2769', '#19173D']}
+              locations={[0.1, 0.45, 0.75]}
+              style={styles.gradientFill}
+            />
             <Text style={styles.modalTitle}>Budget Alert!</Text>
             <Text style={styles.modalText}>
               You're approaching your entertainment budget limit. Consider reducing spending in this category.
@@ -249,6 +283,7 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
     alignItems: 'center',
+    padding: scale(20),
   },
   scrollView: {
     flex: 1,
@@ -280,6 +315,48 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     fontFamily: 'Poppins-Regular',
   },
+  
+  // No Budget Data Styles
+  noBudgetTitle: {
+    fontSize: moderateScale(24),
+    fontFamily: 'Poppins-Bold',
+    color: COLORS.text,
+    marginTop: verticalScale(24),
+    marginBottom: verticalScale(12),
+    textAlign: 'center',
+  },
+  noBudgetText: {
+    fontSize: moderateScale(16),
+    fontFamily: 'Poppins-Regular',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: verticalScale(32),
+    paddingHorizontal: scale(20),
+    lineHeight: verticalScale(24),
+  },
+  onboardingButtonWrapper: {
+    width: '80%',
+    borderRadius: moderateScale(12),
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: verticalScale(4) },
+    shadowOpacity: 0.3,
+    shadowRadius: moderateScale(8),
+    elevation: 5,
+  },
+  onboardingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: verticalScale(16),
+    gap: scale(8),
+  },
+  onboardingButtonText: {
+    color: COLORS.text,
+    fontSize: moderateScale(18),
+    fontFamily: 'Poppins-SemiBold',
+  },
+  
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: moderateScale(20),
@@ -347,21 +424,28 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#2A265C',
+    width: '85%',
     borderRadius: moderateScale(20),
     padding: scale(24),
-    width: '85%',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: verticalScale(10) },
     shadowOpacity: 0.5,
     shadowRadius: moderateScale(20),
     elevation: 10,
+    overflow: 'hidden',
+  },
+  gradientFill: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   modalTitle: {
     fontSize: moderateScale(22),

@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Link, useRouter } from "expo-router";
 import { api } from "../src/api";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
   const [username, setUsername] = useState('');   // this is actually email
@@ -30,8 +31,17 @@ const Login = () => {
       // Store token (basic approach)
       global.authToken = token;
 
+      // Save user data to AsyncStorage
+      await AsyncStorage.setItem('userData', JSON.stringify({
+        username: user.username || user.name,
+        email: user.email,
+        name: user.name || user.username,
+        id: user.id
+      }));
+
       console.log("Logged in user:", user);
       console.log("Remember Me:", rememberMe);
+      console.log("Saved to AsyncStorage:", user.name || user.username);
 
       router.replace("/(tabs)/home");
     } catch (error) {

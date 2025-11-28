@@ -1,8 +1,20 @@
-import React from "react";
-import { SafeAreaView, View, ScrollView, Image, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import React, { useState, useCallback } from "react";
+import { 
+    SafeAreaView, 
+    View, 
+    ScrollView, 
+    Image, 
+    Text, 
+    TouchableOpacity, 
+    StyleSheet,
+    Dimensions,
+    Modal 
+} from "react-native";
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { scale, verticalScale, moderateScale } from '../../src/responsive';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -32,13 +44,113 @@ const CircleProgress = ({ percent, target, saved }) => {
 };
 
 export default function Profile() {
+  const [username, setUsername] = useState('User');
+  const [email, setEmail] = useState('');
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const router = useRouter();
+
   const targetAmount = 10000;
   const savedAmount = 6500;
   const progressPercent = Math.round((savedAmount / targetAmount) * 100);
 
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [])
+  );
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData != null) {
+        const user = JSON.parse(userData);
+        setUsername(user.name || user.username || 'User');
+        setEmail(user.email || '');
+      }
+    } catch (e) {
+      console.error('Failed to load user data', e);
+    }
+  };
+
+  const handleLogout = () => {
+    setLogoutModalVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      // Clear all user data from AsyncStorage
+      await AsyncStorage.removeItem('userData');
+      await AsyncStorage.removeItem('userBudget');
+      
+      // Clear auth token
+      global.authToken = null;
+      
+      console.log("User logged out successfully");
+      
+      // Close modal and navigate to login screen
+      setLogoutModalVisible(false);
+      router.replace('/');
+    } catch (error) {
+      console.error('Failed to log out', error);
+      setLogoutModalVisible(false);
+    }
+  };
+
+  const cancelLogout = () => {
+    setLogoutModalVisible(false);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar style="light" backgroundColor={COLORS.background} translucent={false} />
+      
+      {/* Custom Logout Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={logoutModalVisible}
+        onRequestClose={cancelLogout}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <LinearGradient
+              colors={['#433DA3', '#2B2769', '#19173D']}
+              locations={[0.1, 0.45, 0.75]}
+              style={styles.gradientFill}
+            />
+            
+            <Text style={styles.modalTitle}>Log Out</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to log out?
+            </Text>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.cancelButtonWrapper}
+                onPress={cancelLogout}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.logoutConfirmWrapper}
+                onPress={confirmLogout}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#E33C3C', '#E3823C']}
+                  locations={[0.1, 0.95]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={styles.gradientBtn}
+                />
+                <Text style={styles.logoutConfirmText}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       
       <ScrollView 
         style={styles.scrollView} 
@@ -54,7 +166,8 @@ export default function Profile() {
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.name}>Juan Dela Cruz Jr.</Text>
+          <Text style={styles.name}>{username}</Text>
+          <Text style={styles.email}>{email}</Text>
           <Text style={styles.quote}>"Budgeting is the key to financial freedom"</Text>
         </View>
 
@@ -88,7 +201,7 @@ export default function Profile() {
         </TouchableOpacity>
 
         {/* Log out Button */}
-        <TouchableOpacity style={styles.logoutButtonWrapper} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.logoutButtonWrapper} activeOpacity={0.7} onPress={handleLogout}>
           <LinearGradient
             colors={[COLORS.accent, COLORS.primary]}
             style={styles.logoutButton}
@@ -158,9 +271,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(20),
     paddingTop: verticalScale(50),
     paddingBottom: verticalScale(50),
-    maxWidth: 600, // Maximum width for larger screens
+    maxWidth: 600,
     width: '100%',
-    alignSelf: 'center', // Center the content container
+    alignSelf: 'center',
   },
 
   header: {
@@ -190,6 +303,13 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(24),
     fontFamily: 'Poppins-Bold',
     color: COLORS.yellow,
+    marginBottom: verticalScale(4),
+  },
+
+  email: {
+    fontSize: moderateScale(14),
+    fontFamily: 'Poppins-Regular',
+    color: COLORS.textSecondary,
     marginBottom: verticalScale(8),
   },
 
@@ -290,5 +410,96 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: moderateScale(15),
     fontFamily: 'Poppins-SemiBold',
+  },
+
+  // --- Custom Logout Modal ---
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  modalContent: {
+    width: '85%',
+    borderRadius: moderateScale(20),
+    padding: scale(24),
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: verticalScale(10) },
+    shadowOpacity: 0.5,
+    shadowRadius: moderateScale(20),
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  
+  gradientFill: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  
+  modalTitle: {
+    fontSize: moderateScale(24),
+    fontFamily: 'Poppins-Bold',
+    color: COLORS.yellow,
+    marginBottom: verticalScale(12),
+  },
+  
+  modalText: {
+    fontSize: moderateScale(16),
+    fontFamily: 'Poppins-Regular',
+    color: COLORS.text,
+    textAlign: 'center',
+    marginBottom: verticalScale(24),
+    lineHeight: verticalScale(24),
+  },
+  
+  modalButtons: {
+    flexDirection: 'row',
+    gap: scale(12),
+    width: '100%',
+  },
+  
+  cancelButtonWrapper: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: COLORS.textSecondary,
+    borderRadius: moderateScale(12),
+    paddingVertical: verticalScale(12),
+    alignItems: 'center',
+  },
+  
+  cancelButtonText: {
+    color: COLORS.text,
+    fontSize: moderateScale(15),
+    fontFamily: 'Poppins-SemiBold',
+  },
+  
+  logoutConfirmWrapper: {
+    flex: 1,
+    borderRadius: moderateScale(12),
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  
+  gradientBtn: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  
+  logoutConfirmText: {
+    color: COLORS.text,
+    fontSize: moderateScale(15),
+    fontFamily: 'Poppins-SemiBold',
+    paddingVertical: verticalScale(14),
+    textAlign: 'center',
+    zIndex: 1,
   },
 });
