@@ -129,16 +129,10 @@ const Community = () => {
     };
 
     const handlePostClick = (post) => {
-        const commentsText = post.comments.length > 0
-            ? `\n\nComments (${post.comments.length}):\n` +
-            post.comments.slice(0, 3).map(c => `• ${c.text}`).join('\n')
-            : '';
-
-        Alert.alert(
-            post.title,
-            `${post.content}${commentsText}\n\nPosted by ${post.user?.username || 'Unknown'}`,
-            [{ text: 'Close', style: 'cancel' }]
-        );
+        router.push({
+            pathname: '/PostDetails',
+            params: { post: JSON.stringify(post) }
+        });
     };
 
     const getTimeAgo = (dateString) => {
