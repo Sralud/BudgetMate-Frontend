@@ -56,19 +56,19 @@ const Home = () => {
       const savedData = await AsyncStorage.getItem('userBudget');
       if (savedData != null) {
         setBudgetData(JSON.parse(savedData));
-      } else {
-        // 2. If not found locally, try backend (Online sync)
-        try {
-          const response = await api.get('/api/budget');
-          if (response.data) {
-            const backendData = response.data;
-            // Save to local storage for next time
-            await AsyncStorage.setItem('userBudget', JSON.stringify(backendData));
-            setBudgetData(backendData);
-          }
-        } catch (apiError) {
-          console.log('No budget data on backend or offline:', apiError.message);
+      }
+
+      // 2. Always fetch from backend (Stale-While-Revalidate)
+      try {
+        const response = await api.get('/api/budget');
+        if (response.data) {
+          const backendData = response.data;
+          // Save to local storage for next time
+          await AsyncStorage.setItem('userBudget', JSON.stringify(backendData));
+          setBudgetData(backendData);
         }
+      } catch (apiError) {
+        console.log('No budget data on backend or offline:', apiError.message);
       }
     } catch (error) {
       console.error('Failed to load budget data', error);

@@ -135,9 +135,7 @@ export default function ExpenseHistory() {
                     <MaterialIcons name="arrow-back" size={moderateScale(24)} color={COLORS.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Expense History</Text>
-                <TouchableOpacity onPress={() => router.push('/AddExpense')} style={styles.addButton}>
-                    <MaterialIcons name="add" size={moderateScale(24)} color={COLORS.text} />
-                </TouchableOpacity>
+                <View style={{ width: moderateScale(40) }} />
             </View>
 
             {/* Total Summary */}
