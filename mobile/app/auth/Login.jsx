@@ -8,8 +8,11 @@ import { api } from "../../src/api/api";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
+  // State: These variables hold what the user types
   const [username, setUsername] = useState('');   // this is actually email
   const [password, setPassword] = useState('');
+
+  // UI State: Controls loading spinners and error messages
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -17,10 +20,12 @@ const Login = () => {
 
   const router = useRouter();
 
+  // Action: Handle the Login Button Click
   const handleLogin = async () => {
     setErrors({});
     let currentErrors = {};
 
+    // 1. Validate: Make sure fields aren't empty
     if (!username) currentErrors.username = "Email or Username is required";
     if (!password) currentErrors.password = "Password is required";
 
@@ -31,6 +36,7 @@ const Login = () => {
 
     setLoading(true);
     try {
+      // 2. Send data to backend
       const response = await api.post("/api/auth/login", {
         email: username,
         password: password,
@@ -38,10 +44,10 @@ const Login = () => {
 
       const { token, user } = response.data;
 
-      // Store token (basic approach)
+      // 3. Success! Save the token and user info
       global.authToken = token;
 
-      // Save user data to AsyncStorage
+      // AsyncStorage keeps the user logged in even if they close the app
       await AsyncStorage.setItem('userData', JSON.stringify({
         username: user.username || user.name,
         email: user.email,
@@ -49,12 +55,10 @@ const Login = () => {
         id: user.id
       }));
 
-      console.log("Logged in user:", user);
-      console.log("Remember Me:", rememberMe);
-      console.log("Saved to AsyncStorage:", user.name || user.username);
-
+      // 4. Navigate to the Home Screen
       router.replace("/(tabs)/home");
     } catch (error) {
+      // 5. Error handling
       console.log("Login error:", error?.response?.data || error.message);
       const message = error?.response?.data?.message || "Login failed";
       alert(message);

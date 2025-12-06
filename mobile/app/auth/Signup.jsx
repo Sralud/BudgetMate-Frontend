@@ -25,8 +25,12 @@ const SignUp = () => {
 
   const router = useRouter();
 
+  // Action: Handle User Registration
   const handleSignUp = () => {
     let valid = true;
+
+    // 1. Validation Logic
+    // Using simple "if" statements to check if the inputs are correct
 
     // Username
     if (!username.trim()) {
@@ -36,7 +40,7 @@ const SignUp = () => {
       setUsernameError('');
     }
 
-    // Email
+    // Email (using a Regex pattern to check format like user@domain.com)
     if (!email.trim()) {
       setEmailError('Email is required');
       valid = false;
@@ -47,7 +51,7 @@ const SignUp = () => {
       setEmailError('');
     }
 
-    // Password
+    // Password Length
     if (!password.trim()) {
       setPasswordError('Password is required');
       valid = false;
@@ -58,7 +62,7 @@ const SignUp = () => {
       setPasswordError('');
     }
 
-    // Confirm Password
+    // Confirm Password (must match the first one)
     if (!confirmPassword.trim()) {
       setConfirmPasswordError('Confirm your password');
       valid = false;
@@ -71,6 +75,7 @@ const SignUp = () => {
 
     if (!valid || loading) return;
 
+    // 2. Submit to Backend
     const doSignup = async () => {
       setLoading(true);
       try {
@@ -81,10 +86,9 @@ const SignUp = () => {
         });
 
         const { token, user } = response.data;
-
         global.authToken = token;
 
-        // Save user data to AsyncStorage
+        // 3. Save User Data locally (Auto-Login)
         await AsyncStorage.setItem('userData', JSON.stringify({
           username: user.username || username,
           email: user.email || email,
@@ -93,8 +97,8 @@ const SignUp = () => {
         }));
 
         console.log("Signed up user:", user);
-        console.log("Saved to AsyncStorage:", username);
 
+        // 4. Move to Onboarding (Set budget goals)
         router.replace("/budget/BudgetOnboarding");
       } catch (error) {
         console.log("Signup error:", error?.response?.data || error.message);

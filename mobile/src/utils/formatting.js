@@ -2,12 +2,13 @@
 
 /**
  * Format number as currency
- * @param {number} amount - The amount to format
- * @param {string} currency - Currency symbol (default: ₱)
- * @returns {string} Formatted currency string
+ * Example: 1500.5 => "₱ 1,500.50"
  */
 export const formatCurrency = (amount, currency = '₱') => {
+    // If no amount is given, just return 0
     if (amount === null || amount === undefined) return `${currency} 0`;
+
+    // Convert to number and add commas and decimals
     return `${currency} ${Number(amount).toLocaleString('en-PH', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
@@ -26,23 +27,24 @@ export const formatNumber = (number) => {
 
 /**
  * Format date to readable string
- * @param {Date|string} date - The date to format
- * @param {string} format - Format type ('short', 'long', 'full')
- * @returns {string} Formatted date string
+ * Usage: formatDate(new Date(), 'short') => 'Dec 5, 2025'
  */
 export const formatDate = (date, format = 'short') => {
     if (!date) return '';
 
+    // Create a Date object if a string was passed
     const dateObj = typeof date === 'string' ? new Date(date) : date;
 
     switch (format) {
         case 'short':
+            // Example: Dec 5, 2023
             return dateObj.toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric',
             });
         case 'long':
+            // Example: Friday, December 5, 2023
             return dateObj.toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long',
@@ -56,6 +58,7 @@ export const formatDate = (date, format = 'short') => {
                 day: 'numeric',
             });
         case 'time':
+            // Example: 10:30 AM
             return dateObj.toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',

@@ -50,7 +50,10 @@ export default function EditBudget() {
         }
     };
 
+    // Action: Save Changes
+    // This function updates the budget settings both locally (for speed) and on the server (for sync).
     const handleSave = async () => {
+        // 1. Validation
         if (!income || parseFloat(income) <= 0) {
             Alert.alert('Error', 'Please enter a valid monthly income');
             return;
@@ -62,6 +65,7 @@ export default function EditBudget() {
             const existingDataStr = await AsyncStorage.getItem('userBudget');
             const existingData = existingDataStr ? JSON.parse(existingDataStr) : {};
 
+            // 2. Prepare updated object
             const updatedData = {
                 ...existingData,
                 monthlyIncome: parseFloat(income),
@@ -70,10 +74,10 @@ export default function EditBudget() {
                 annualSavingsGoal: parseFloat(annualGoal) || 0,
             };
 
-            // 1. Save locally
+            // 3. Save locally
             await AsyncStorage.setItem('userBudget', JSON.stringify(updatedData));
 
-            // 2. Save to backend
+            // 4. Save to backend
             try {
                 await api.put('/api/budget', updatedData);
             } catch (apiError) {

@@ -13,37 +13,42 @@ export const useAuth = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const router = useRouter();
 
-    // Load user data on mount
+    // Load user data on mount (when the app starts)
     useEffect(() => {
         loadUserData();
     }, []);
 
+    // Helper: Checks if we are already logged in by looking at local storage
     const loadUserData = async () => {
         try {
+            // Check if 'userData' exists in the phone's storage
             const userData = await AsyncStorage.getItem('userData');
             if (userData) {
                 const parsedUser = JSON.parse(userData);
-                setUser(parsedUser);
-                setIsAuthenticated(true);
+                setUser(parsedUser); // Set the user state
+                setIsAuthenticated(true); // Mark as logged in
             }
         } catch (error) {
             console.error('Error loading user data:', error);
         } finally {
-            setLoading(false);
+            setLoading(false); // Done loading, whether success or fail
         }
     };
 
+    // Action: Log in the user with email/password
     const login = async (credentials) => {
         try {
+            // Send request to backend
             const response = await api.post('/api/auth/login', credentials);
             const { token, user: userData } = response.data;
 
-            // Store token
+            // 1. Store the token globally for API calls
             global.authToken = token;
 
-            // Save user data
+            // 2. Save user info permanently on the device
             await AsyncStorage.setItem('userData', JSON.stringify(userData));
 
+            // 3. Update the app state
             setUser(userData);
             setIsAuthenticated(true);
 
@@ -81,18 +86,20 @@ export const useAuth = () => {
         }
     };
 
+    // Action: Log out and clear all data
     const logout = async () => {
         try {
-            // Clear local storage
+            // 1. Remove user info and budget data from storage
             await AsyncStorage.multiRemove(['userData', 'userBudget']);
 
-            // Clear token
+            // 2. Clear the global token
             global.authToken = null;
 
+            // 3. Reset state
             setUser(null);
             setIsAuthenticated(false);
 
-            // Navigate to login
+            // 4. Send user back to Login screen
             router.replace('/auth/Login');
         } catch (error) {
             console.error('Logout error:', error);

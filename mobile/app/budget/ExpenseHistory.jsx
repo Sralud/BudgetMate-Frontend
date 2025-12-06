@@ -47,6 +47,8 @@ export default function ExpenseHistory() {
         loadExpenses();
     };
 
+    // Action: Delete Expense
+    // Asks for confirmation before removing an item permanently.
     const handleDelete = (id) => {
         Alert.alert(
             'Delete Expense',
@@ -56,9 +58,11 @@ export default function ExpenseHistory() {
                 {
                     text: 'Delete',
                     style: 'destructive',
+                    // Logic to run if user confirms
                     onPress: async () => {
                         try {
                             await api.delete(`/api/expenses/${id}`);
+                            // Update local state by removing the item
                             setExpenses(expenses.filter(exp => exp._id !== id));
                             Alert.alert('Success', 'Expense deleted');
                         } catch (error) {

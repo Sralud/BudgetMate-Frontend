@@ -29,6 +29,8 @@ const Community = () => {
         }, [])
     );
 
+    // Action: Fetch Posts from Backend
+    // Connects to /api/posts to get the latest community discussions
     const loadPosts = async () => {
         try {
             const response = await api.get('/api/posts');

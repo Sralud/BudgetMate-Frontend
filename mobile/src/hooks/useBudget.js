@@ -11,28 +11,29 @@ export const useBudget = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Load budget data
+    // Action: Load budget from phone storage first, then update from internet
     const loadBudget = useCallback(async () => {
         setLoading(true);
         setError(null);
 
         try {
-            // Try local storage first
+            // 1. Try local storage (fastest) - this allows offline access
             const savedData = await AsyncStorage.getItem('userBudget');
             if (savedData) {
                 setBudgetData(JSON.parse(savedData));
             }
 
-            // Then try backend
+            // 2. Then try backend (freshest data)
             try {
                 const response = await api.get('/api/budget');
                 if (response.data) {
                     const backendData = response.data;
+                    // Update local storage with the new data
                     await AsyncStorage.setItem('userBudget', JSON.stringify(backendData));
                     setBudgetData(backendData);
                 }
             } catch (apiError) {
-                console.log('No budget data on backend:', apiError.message);
+                console.log('No budget data on backend or offline:', apiError.message);
             }
         } catch (err) {
             console.error('Failed to load budget:', err);
@@ -42,18 +43,18 @@ export const useBudget = () => {
         }
     }, []);
 
-    // Save budget data
+    // Action: Save new budget settings (like income)
     const saveBudget = async (data) => {
         try {
-            // Save locally
+            // 1. Save locally (instant feedback)
             await AsyncStorage.setItem('userBudget', JSON.stringify(data));
             setBudgetData(data);
 
-            // Save to backend
+            // 2. Save to backend (sync)
             try {
                 await api.post('/api/budget', data);
             } catch (apiError) {
-                console.log('Failed to save to backend:', apiError.message);
+                console.log('Failed to save to backend (will sync later):', apiError.message);
             }
 
             return { success: true };
@@ -75,14 +76,17 @@ export const useBudget = () => {
         }
     };
 
-    // Calculate available balance
+    // Helper: Calculate how much money is left to spend
+    // Formula: Income - Spending (excluding Savings deposits) - Savings Goals
     const calculateAvailableBalance = (expenses = []) => {
         if (!budgetData?.monthlyIncome) return 0;
 
+        // Sum up all spending that implies money leaving your pocket (Food, Transport, etc.)
         const totalSpent = expenses
             .filter(item => item.category !== 'Savings')
             .reduce((sum, item) => sum + item.amount, 0);
 
+        // Sum up money moved to savings (not "spent" but also not "available" for bills)
         const emergencyFundSaved = expenses
             .filter(item => item.category === 'Savings')
             .reduce((sum, item) => sum + item.amount, 0);

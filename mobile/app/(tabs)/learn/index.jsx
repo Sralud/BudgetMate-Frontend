@@ -59,6 +59,10 @@ const Learn = () => {
                 <Text style={styles.subtitle}>Curated articles to help you grow.</Text>
             </View>
 
+            {/* 
+              Render List of Resources 
+              We use .map() to loop through the RESOURCES array and create a Card for each one.
+            */}
             <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.content}

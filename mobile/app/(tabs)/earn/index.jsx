@@ -65,34 +65,42 @@ const Earn = () => {
     const [newSource, setNewSource] = useState('');
 
     // Load earnings from AsyncStorage and compute current month total + chart data
+    // Action: Load Earnings from Storage
+    // We store earnings locally in a JSON array.
+    // This function calculates the total for the current month to display on the dashboard.
     const loadEarnings = async () => {
         setLoading(true);
         try {
-            // Get current user ID
+            // 1. Get current user ID to ensure we load the correct data
             const userDataStr = await AsyncStorage.getItem('userData');
             const user = userDataStr ? JSON.parse(userDataStr) : null;
             const storageKey = user?.id ? `earnings_${user.id}` : 'earnings';
 
+            // 2. Read the raw JSON string
             const raw = await AsyncStorage.getItem(storageKey);
             let entries = [];
             if (raw) {
                 entries = JSON.parse(raw);
             }
 
+            // 3. Current Date Info
             const now = new Date();
             const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth(); // 0-11
+            const currentMonth = now.getMonth(); // 0-11 (Jan is 0)
 
             let total = 0;
             const monthlyData = Array(12).fill(0);
 
+            // 4. Loop through entries to sum up amounts
             entries.forEach(e => {
                 try {
                     const d = new Date(e.date);
+                    // Only count for current year
                     if (d.getFullYear() === currentYear) {
                         const amount = Number(e.amount) || 0;
                         monthlyData[d.getMonth()] += amount;
 
+                        // Check if it matches current month
                         if (d.getMonth() === currentMonth) {
                             total += amount;
                         }
@@ -158,7 +166,8 @@ const Earn = () => {
         }
     };
 
-    // Filter jobs based on search query
+    // Search Functionality
+    // Filters the JOBS array based on title, description, or tags matching the search query.
     const filteredJobs = JOBS.filter(job =>
         job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||

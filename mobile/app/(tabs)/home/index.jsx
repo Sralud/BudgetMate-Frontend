@@ -20,18 +20,22 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [username, setUsername] = useState('Friend');
 
+  // useFocusEffect runs whenever this screen comes into focus
+  // Think of it like "useEffect" but specifically for navigation
   useFocusEffect(
     useCallback(() => {
-      loadData();
+      loadData(); // Reload data every time we visit the Home tab
     }, [])
   );
 
+  // Action: Fetch all necessary data for the dashboard
   const loadData = async () => {
     try {
+      // Run all fetch requests in parallel for speed
       await Promise.all([
-        loadBudgetData(),
-        loadUserData(),
-        loadExpenses()
+        loadBudgetData(), // Income & Goals
+        loadUserData(),   // Name & Profile
+        loadExpenses()    // Transaction History
       ]);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -48,12 +52,12 @@ const Home = () => {
 
   const loadBudgetData = async () => {
     try {
-      // 1. Try local storage first
+      // 1. Try local storage first (Offline support)
       const savedData = await AsyncStorage.getItem('userBudget');
       if (savedData != null) {
         setBudgetData(JSON.parse(savedData));
       } else {
-        // 2. If not found locally, try backend
+        // 2. If not found locally, try backend (Online sync)
         try {
           const response = await api.get('/api/budget');
           if (response.data) {
@@ -149,7 +153,7 @@ const Home = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Hero Card: Balance */}
+        {/* Hero Card: The main "Health Bar" of your budget */}
         <HeroCard
           availableBalance={availableBalance}
           spendPercentage={spendPercentage}

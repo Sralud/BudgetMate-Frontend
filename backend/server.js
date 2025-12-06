@@ -1,8 +1,8 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
+const express = require("express"); // The web server framework
+const cors = require("cors");       // Allows the frontend to talk to this backend
+const dotenv = require("dotenv");   // Loads secrets (like passwords) from .env file
 
-const connectDB = require("./config/db");
+const connectDB = require("./config/db"); // Helper to connect to MongoDB
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const earningRoutes = require("./routes/earningRoutes");
@@ -10,15 +10,20 @@ const postRoutes = require("./routes/postRoutes");
 const goalRoutes = require("./routes/goalRoutes");
 const budgetRoutes = require("./routes/budgetRoutes");
 
+// Load environment variables
 dotenv.config();
+
+// Connect to the Database
 connectDB();
 
-const app = express();
+const app = express(); // Initialize the App
 
-app.use(cors());
-app.use(express.json());
+// Middleware
+app.use(cors());          // Enable Cross-Origin requests
+app.use(express.json());  // Allow the server to read JSON data sent by the frontend
 
 // ✅ Mount routes
+// This tells the server: "If a request starts with /api/auth, send it to authRoutes"
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/earnings", earningRoutes);

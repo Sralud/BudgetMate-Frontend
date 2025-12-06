@@ -84,8 +84,11 @@ export default function BudgetOnboarding() {
   }
 
   // Finish Onboarding
+  // Action: Finish and Save
   async function finishOnboarding() {
     setLoading(true);
+
+    // Prepare the data object
     const budgetData = {
       monthlyIncome: parseFloat(income),
       paymentFrequency: frequency,
@@ -96,10 +99,10 @@ export default function BudgetOnboarding() {
     };
 
     try {
-      // 1. Save locally
+      // 1. Save locally (for offline use)
       await AsyncStorage.setItem('userBudget', JSON.stringify(budgetData));
 
-      // 2. Save to backend
+      // 2. Save to backend (for cross-device sync)
       try {
         await api.put('/api/budget', budgetData);
         console.log('Budget data synced to backend');
@@ -108,6 +111,7 @@ export default function BudgetOnboarding() {
         // We don't block navigation if backend fails, but we log it
       }
 
+      // 3. Go to Home Screen
       router.replace('/(tabs)/home');
     } catch (error) {
       console.error('Error saving budget data:', error);

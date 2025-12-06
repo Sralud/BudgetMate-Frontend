@@ -42,20 +42,25 @@ export default function AddExpense() {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
+    // Action: Submit the Expense Form
     const handleSubmit = async () => {
         setErrors({});
         let currentErrors = {};
 
+        // 1. Validate Input
+        // Check if amount is entered and is a positive number
         if (!amount) {
             currentErrors.amount = 'Amount is required';
         } else if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
             currentErrors.amount = 'Enter a valid amount';
         }
 
+        // Check if a category is selected
         if (!category) {
             currentErrors.category = 'Category is required';
         }
 
+        // If there are errors, stop here and show them
         if (Object.keys(currentErrors).length > 0) {
             setErrors(currentErrors);
             return;

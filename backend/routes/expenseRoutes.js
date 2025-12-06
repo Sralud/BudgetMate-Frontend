@@ -4,9 +4,8 @@ const Expense = require("../models/Expense");
 const auth = require("../middleware/authMiddleware");
 const { validateExpense } = require("../middleware/validationMiddleware");
 
-// @route   GET /api/expenses
-// @desc    Get all expenses for logged-in user
-// @access  Private
+// 1. GET /api/expenses - Get all my expenses
+// Sorted by newest first (date: -1)
 router.get("/", auth, async (req, res) => {
     try {
         const expenses = await Expense.find({ user: req.user.id }).sort({ date: -1 });
@@ -17,21 +16,20 @@ router.get("/", auth, async (req, res) => {
     }
 });
 
-// @route   POST /api/expenses
-// @desc    Add new expense
-// @access  Private
+// 2. POST /api/expenses - Add a new expense
 router.post("/", [auth, validateExpense], async (req, res) => {
     try {
         const { amount, category, description, date } = req.body;
 
         const newExpense = new Expense({
-            user: req.user.id,
+            user: req.user.id, // Link expense to the logged-in user
             amount,
             category,
             description,
             date: date || Date.now(),
         });
 
+        // Save to DB
         const expense = await newExpense.save();
         res.json(expense);
     } catch (err) {

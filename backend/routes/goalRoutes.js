@@ -4,9 +4,7 @@ const Goal = require("../models/Goal");
 const auth = require("../middleware/authMiddleware");
 const { validateGoal } = require("../middleware/validationMiddleware");
 
-// @route   GET /api/goals
-// @desc    Get all goals for logged-in user
-// @access  Private
+// 1. GET /api/goals - Get all user goals
 router.get("/", auth, async (req, res) => {
     try {
         const goals = await Goal.find({ user: req.user.id }).sort({ createdAt: -1 });
@@ -17,9 +15,7 @@ router.get("/", auth, async (req, res) => {
     }
 });
 
-// @route   POST /api/goals
-// @desc    Create a goal
-// @access  Private
+// 2. POST /api/goals - Create a new saving goal
 router.post("/", [auth, validateGoal], async (req, res) => {
     try {
         const { name, targetAmount, currentAmount, category, targetDate } = req.body;

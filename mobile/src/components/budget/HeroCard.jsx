@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { scale, verticalScale, moderateScale } from '../../utils/responsive';
 
+// Theme Colors
 const COLORS = {
     background: '#141326',
     cardBg: '#2A265C',
@@ -14,10 +15,20 @@ const COLORS = {
     success: '#4CAF50',
 };
 
+/**
+ * HeroCard Component
+ * Displays the main financial status ("Health Bar") at the top of the Home screen.
+ * 
+ * Props:
+ * - availableBalance: Money left to spend (Income - Spending)
+ * - spendPercentage: How much of the income is used (0-100)
+ * - totalUsed: Total amount spent/saved
+ * - monthlyIncome: The total budget limit
+ */
 const HeroCard = ({ availableBalance, spendPercentage, totalUsed, monthlyIncome }) => {
     return (
         <LinearGradient
-            colors={['#433DA3', '#1F1B4A']}
+            colors={['#433DA3', '#1F1B4A']} // Purple/Blue gradient
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroCard}
@@ -27,11 +38,18 @@ const HeroCard = ({ availableBalance, spendPercentage, totalUsed, monthlyIncome 
                 <MaterialIcons name="account-balance-wallet" size={20} color={COLORS.textSecondary} />
             </View>
 
+            {/* Display the balance elegantly */}
             <Text style={styles.heroAmount}>₱ {availableBalance.toLocaleString()}</Text>
 
+            {/* Visual Budget Bar */}
             <View style={styles.budgetProgress}>
                 <View style={styles.progressBackground}>
-                    <View style={[styles.progressFill, { width: `${Math.min(spendPercentage, 100)}%`, backgroundColor: spendPercentage > 90 ? COLORS.accent : COLORS.success }]} />
+                    {/* The colored bar width is dynamic based on spending */}
+                    {/* If spending > 90%, it turns RED (accent). Otherwise GREEN (success) */}
+                    <View style={[styles.progressFill, {
+                        width: `${Math.min(spendPercentage, 100)}%`,
+                        backgroundColor: spendPercentage > 90 ? COLORS.accent : COLORS.success
+                    }]} />
                 </View>
                 <View style={styles.progressLabels}>
                     <Text style={styles.progressLabelText}>Used: ₱{totalUsed.toLocaleString()}</Text>

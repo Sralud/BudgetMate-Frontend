@@ -38,12 +38,15 @@ export default function Profile() {
     }, [])
   );
 
+  // Action: Load All Profile Data
+  // Uses Promise.all to fetch User Data, Budget Settings, and Expenses in parallel.
+  // This is faster than awaiting them one by one.
   const loadData = async () => {
     try {
       await Promise.all([
-        loadUserData(),
-        loadBudgetData(),
-        loadExpenses(),
+        loadUserData(),   // Name, Email
+        loadBudgetData(), // Savings Goals
+        loadExpenses(),   // Transaction History
       ]);
     } catch (error) {
       console.error('Error loading data:', error);
