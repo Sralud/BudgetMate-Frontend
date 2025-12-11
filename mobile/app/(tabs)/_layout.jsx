@@ -88,6 +88,12 @@ export default function TabsLayout() {
           ),
         }}
       />
+      {/* Hide styles files from tab bar */}
+      <Tabs.Screen name="home/styles" options={{ href: null }} />
+      <Tabs.Screen name="learn/styles" options={{ href: null }} />
+      <Tabs.Screen name="earn/styles" options={{ href: null }} />
+      <Tabs.Screen name="community/styles" options={{ href: null }} />
+      <Tabs.Screen name="profile/styles" options={{ href: null }} />
     </Tabs>
   );
 }
