@@ -6,15 +6,19 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import ResourceCard from '../../../src/components/ResourceCard';
 import { fetchArticles } from '../../../src/api/api';
+import { useAuth } from '../../../src/hooks/useAuth';
 import { styles, COLORS } from './styles';
 
 const Learn = () => {
     const router = useRouter();
+    const { user } = useAuth(); // Use the auth hook
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
-    const [isAdmin, setIsAdmin] = useState(false);
+
+    // Check if user is admin directly from the user object
+    const isAdmin = user?.role === 'admin';
 
     // Load articles from API
     const loadArticles = async () => {
@@ -31,26 +35,8 @@ const Learn = () => {
         }
     };
 
-    // Check if user is admin
-    const checkAdminStatus = () => {
-        // Get user data from global storage
-        const userData = global.userData;
-        console.log('=== Admin Check ===');
-        console.log('userData:', userData);
-        console.log('userData.role:', userData?.role);
-        console.log('Is admin?:', userData && userData.role === 'admin');
-
-        if (userData && userData.role === 'admin') {
-            console.log('✅ Setting isAdmin to true');
-            setIsAdmin(true);
-        } else {
-            console.log('❌ User is not admin');
-        }
-    };
-
     useEffect(() => {
         loadArticles();
-        checkAdminStatus();
     }, []);
 
     // Handle pull-to-refresh
