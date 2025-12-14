@@ -3,6 +3,7 @@ import {
     SafeAreaView,
     View,
     ScrollView,
+    Image,
     Text,
     TextInput,
     TouchableOpacity,
@@ -18,6 +19,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { api } from '../../src/api/api';
 import { styles, COLORS } from './PersonalInfoStyles';
+import { getUserAvatar, generateRandomSeed } from '../../src/utils/avatar';
 
 export default function PersonalInfo() {
     const router = useRouter();
@@ -25,6 +27,7 @@ export default function PersonalInfo() {
     // User data
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [avatarSeed, setAvatarSeed] = useState('');
     const [accountType, setAccountType] = useState('email'); // 'email' or 'google'
 
     // Password fields
@@ -58,6 +61,7 @@ export default function PersonalInfo() {
                 const user = JSON.parse(userData);
                 setName(user.name || user.username || '');
                 setEmail(user.email || '');
+                setAvatarSeed(user.avatarSeed || '');
                 // Check if user has googleId to determine account type
                 setAccountType(user.googleId ? 'google' : 'email');
             }
@@ -73,6 +77,12 @@ export default function PersonalInfo() {
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
+    };
+
+    // Randomize avatar
+    const handleRandomizeAvatar = () => {
+        const newSeed = generateRandomSeed();
+        setAvatarSeed(newSeed);
     };
 
     // Handle profile update (name and email)
@@ -102,6 +112,7 @@ export default function PersonalInfo() {
             const response = await api.put('/api/auth/update-profile', {
                 name: name.trim(),
                 email: email.trim(),
+                avatarSeed: avatarSeed,
             });
 
             // Update local storage with new user data
@@ -110,6 +121,7 @@ export default function PersonalInfo() {
                 const user = JSON.parse(userData);
                 user.name = response.data.user.name;
                 user.email = response.data.user.email;
+                user.avatarSeed = response.data.user.avatarSeed;
                 await AsyncStorage.setItem('userData', JSON.stringify(user));
             }
 
@@ -226,6 +238,28 @@ export default function PersonalInfo() {
                         <Text style={styles.accountTypeText}>
                             {accountType === 'google' ? 'Google Account' : 'Email Account'}
                         </Text>
+                    </View>
+
+                    {/* Avatar Section */}
+                    <Text style={styles.sectionTitle}>Profile Picture</Text>
+                    <View style={styles.sectionCard}>
+                        <View style={styles.avatarSection}>
+                            <View style={styles.avatarPreview}>
+                                <Image
+                                    source={{ uri: getUserAvatar({ avatarSeed, email, name }) }}
+                                    style={styles.avatarImage}
+                                    resizeMode="contain"
+                                />
+                            </View>
+                            <TouchableOpacity
+                                style={styles.randomizeButton}
+                                onPress={handleRandomizeAvatar}
+                                disabled={saving}
+                            >
+                                <MaterialIcons name="refresh" size={moderateScale(20)} color={COLORS.yellow} />
+                                <Text style={styles.randomizeText}>Randomize Avatar</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     {/* Profile Information Section */}

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
@@ -11,6 +11,7 @@ import GoalCard from '../../../src/components/budget/GoalCard';
 import SpendingChart from '../../../src/components/budget/SpendingChart';
 import TransactionCard from '../../../src/components/expense/TransactionCard';
 import { styles, COLORS } from '../../styles/homeStyles';
+import { getUserAvatar } from '../../../src/utils/avatar';
 
 const Home = () => {
   const router = useRouter();
@@ -19,6 +20,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [username, setUsername] = useState('Friend');
+  const [userEmail, setUserEmail] = useState('');
+  const [avatarSeed, setAvatarSeed] = useState('');
 
   // useFocusEffect runs whenever this screen comes into focus
   // Think of it like "useEffect" but specifically for navigation
@@ -81,6 +84,8 @@ const Home = () => {
       if (savedUserData != null) {
         const userObject = JSON.parse(savedUserData);
         setUsername(userObject.name || userObject.username || 'Friend');
+        setUserEmail(userObject.email || '');
+        setAvatarSeed(userObject.avatarSeed || '');
       }
     } catch (error) {
       console.error('Failed to load user data', error);
@@ -147,9 +152,11 @@ const Home = () => {
             style={styles.profileButton}
             onPress={() => router.push('/(tabs)/profile')}
           >
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>{username.charAt(0).toUpperCase()}</Text>
-            </View>
+            <Image
+              source={{ uri: getUserAvatar({ avatarSeed, email: userEmail, name: username }) }}
+              style={styles.avatarImage}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         </View>
 

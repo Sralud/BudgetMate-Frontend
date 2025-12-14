@@ -67,6 +67,12 @@ export const styles = StyleSheet.create({
         fontFamily: 'Poppins-Bold',
         color: COLORS.text,
     },
+    avatarImage: {
+        width: moderateScale(40),
+        height: moderateScale(40),
+        borderRadius: moderateScale(20),
+        backgroundColor: COLORS.cardBg,
+    },
 
     // Actions
     actionRow: {

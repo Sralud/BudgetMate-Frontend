@@ -39,11 +39,15 @@ router.post("/signup", async (req, res) => {
     // "10" is the cost factor (how hard it is to crack)
     const hash = await bcrypt.hash(password, 10);
 
+    // Generate random avatar seed for DiceBear
+    const avatarSeed = Math.random().toString(36).substring(2, 15);
+
     // Create user in Database
     const user = await User.create({
       name: username || null,
       email,
       password: hash,
+      avatarSeed,
     });
 
     // Create a Session Token (JWT)
@@ -51,7 +55,7 @@ router.post("/signup", async (req, res) => {
 
     return res.status(201).json({
       message: "Signup successful",
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, avatarSeed: user.avatarSeed },
       token,
     });
   } catch (err) {
@@ -88,7 +92,7 @@ router.post("/login", async (req, res) => {
 
     return res.json({
       message: "Login successful",
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, avatarSeed: user.avatarSeed },
       token,
     });
   } catch (err) {
@@ -120,11 +124,15 @@ router.post("/google", async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
+      // Generate random avatar seed for new Google users
+      const avatarSeed = Math.random().toString(36).substring(2, 15);
+
       user = await User.create({
         name: name || null,
         email,
         googleId,
         password: null,
+        avatarSeed,
       });
     }
 
@@ -132,7 +140,7 @@ router.post("/google", async (req, res) => {
 
     return res.json({
       message: "Google login successful",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, avatarSeed: user.avatarSeed },
       token,
     });
   } catch (err) {
@@ -155,13 +163,13 @@ router.get("/me", authMiddleware, (req, res) => {
 // Protected route that allows users to update their profile information
 router.put("/update-profile", authMiddleware, async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, avatarSeed } = req.body;
     const userId = req.user.id;
 
     // Validation
-    if (!name && !email) {
+    if (!name && !email && !avatarSeed) {
       return res.status(400).json({
-        message: "At least one field (name or email) is required"
+        message: "At least one field (name, email, or avatarSeed) is required"
       });
     }
 
@@ -182,6 +190,7 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
+    if (avatarSeed) updateData.avatarSeed = avatarSeed;
 
     // Update user
     const updatedUser = await User.findByIdAndUpdate(
@@ -200,7 +209,8 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
         id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
-        role: updatedUser.role
+        role: updatedUser.role,
+        avatarSeed: updatedUser.avatarSeed
       }
     });
   } catch (err) {

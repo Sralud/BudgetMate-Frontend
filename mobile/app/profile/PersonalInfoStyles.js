@@ -168,6 +168,43 @@ export const styles = StyleSheet.create({
         fontFamily: 'Poppins-Bold',
         color: COLORS.text,
     },
+
+    // Avatar Section
+    avatarSection: {
+        alignItems: 'center',
+        paddingVertical: verticalScale(12),
+    },
+    avatarPreview: {
+        width: moderateScale(120),
+        height: moderateScale(120),
+        borderRadius: moderateScale(60),
+        backgroundColor: COLORS.inputBg,
+        borderWidth: 3,
+        borderColor: COLORS.yellow,
+        overflow: 'hidden',
+        marginBottom: verticalScale(16),
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+    },
+    randomizeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,193,7,0.1)',
+        paddingHorizontal: scale(16),
+        paddingVertical: verticalScale(10),
+        borderRadius: moderateScale(20),
+        borderWidth: 1,
+        borderColor: COLORS.yellow,
+    },
+    randomizeText: {
+        fontSize: moderateScale(14),
+        fontFamily: 'Poppins-Medium',
+        color: COLORS.yellow,
+        marginLeft: scale(8),
+    },
+
     gradientBtn: {
         ...StyleSheet.absoluteFillObject,
     },

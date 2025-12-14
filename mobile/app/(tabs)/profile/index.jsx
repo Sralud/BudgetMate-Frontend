@@ -8,6 +8,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { api } from '../../../src/api/api';
 import { styles, COLORS } from '../../styles/profileStyles';
+import { getUserAvatar } from '../../../src/utils/avatar';
 
 const MenuItem = ({ icon, label, value, onPress, isDestructive = false }) => (
   <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
@@ -25,6 +26,7 @@ const MenuItem = ({ icon, label, value, onPress, isDestructive = false }) => (
 export default function Profile() {
   const [username, setUsername] = useState('User');
   const [email, setEmail] = useState('');
+  const [avatarSeed, setAvatarSeed] = useState('');
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const router = useRouter();
 
@@ -62,6 +64,7 @@ export default function Profile() {
         const user = JSON.parse(userData);
         setUsername(user.name || user.username || 'User');
         setEmail(user.email || '');
+        setAvatarSeed(user.avatarSeed || '');
       }
     } catch (e) {
       console.error('Failed to load user data', e);
@@ -189,7 +192,7 @@ export default function Profile() {
           />
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/N2yyWBWpxG/oi83aoen_expires_30_days.png" }}
+              source={{ uri: getUserAvatar({ avatarSeed, email, name: username }) }}
               style={styles.avatarImage}
               resizeMode="contain"
             />
