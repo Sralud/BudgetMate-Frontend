@@ -11,6 +11,7 @@ const goalRoutes = require("./routes/goalRoutes");
 const budgetRoutes = require("./routes/budgetRoutes");
 const articleRoutes = require("./routes/articleRoutes");
 const jobRoutes = require("./routes/jobRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +35,7 @@ app.use("/api/goals", goalRoutes);
 app.use("/api/budget", budgetRoutes);
 app.use("/api/articles", articleRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Simple test route
 app.get("/", (req, res) => {
