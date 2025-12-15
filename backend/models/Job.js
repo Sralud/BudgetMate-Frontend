@@ -1,4 +1,5 @@
 // backend/models/Job.js
+// Updated: Added source, category, and externalUrl fields for OnlineJobs.ph integration
 const mongoose = require("mongoose");
 
 const jobSchema = new mongoose.Schema(
@@ -41,6 +42,20 @@ const jobSchema = new mongoose.Schema(
             default: []
         },
         howToStart: {
+            type: String,
+            trim: true
+        },
+        source: {
+            type: String,
+            enum: ['internal', 'onlinejobs.ph'],
+            default: 'internal'
+        },
+        category: {
+            type: String,
+            enum: ['Virtual Assistant', 'Freelance/Remote', 'Part-time', 'Other'],
+            default: 'Other'
+        },
+        externalUrl: {
             type: String,
             trim: true
         },

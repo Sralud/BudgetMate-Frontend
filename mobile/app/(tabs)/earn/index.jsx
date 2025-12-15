@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Modal, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { moderateScale, verticalScale } from '../../../src/utils/responsive';
@@ -9,6 +9,8 @@ import { useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import JobCard from '../../../src/components/JobCard';
 import EarningsChart from '../../../src/components/budget/EarningsChart';
+import AdminJobPanel from '../../../src/components/AdminJobPanel';
+import { fetchJobs } from '../../../src/api/api';
 import { styles, COLORS } from '../../styles/earnStyles';
 
 
@@ -23,6 +25,7 @@ const Earn = () => {
     const [user, setUser] = useState(null);
     const [jobs, setJobs] = useState([]);
     const [jobsLoading, setJobsLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     // Add Earning State
     const [addEarningModalVisible, setAddEarningModalVisible] = useState(false);
@@ -90,6 +93,8 @@ const Earn = () => {
         setJobsLoading(true);
         try {
             const response = await fetchJobs();
+            console.log('Jobs loaded:', response.jobs?.length);
+            console.log('First job sample:', response.jobs?.[0]);
             setJobs(response.jobs || []);
         } catch (error) {
             console.error('Error loading jobs:', error);
@@ -160,17 +165,40 @@ const Earn = () => {
         }
     };
 
-    // Search Functionality
-    // Filters the jobs array based on title, description, or tags matching the search query.
-    const filteredJobs = jobs.filter(job =>
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (job.tags && job.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
-    );
+    // Category and Search Filtering
+    // Filters jobs by category and search query
+    const filteredJobs = jobs.filter(job => {
+        // Category filter
+        const categoryMatch = selectedCategory === 'All' || job.category === selectedCategory;
+
+        // Search filter
+        const searchMatch = searchQuery === '' ||
+            job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (job.tags && job.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
+
+        return categoryMatch && searchMatch;
+    });
 
     const handleLearnMore = (job) => {
         setSelectedJob(job);
         setJobModalVisible(true);
+    };
+
+    const handleApplyJob = async (job) => {
+        if (job.source === 'onlinejobs.ph' && job.externalUrl) {
+            try {
+                const canOpen = await Linking.canOpenURL(job.externalUrl);
+                if (canOpen) {
+                    await Linking.openURL(job.externalUrl);
+                } else {
+                    Alert.alert('Error', 'Cannot open this link');
+                }
+            } catch (error) {
+                console.error('Error opening URL:', error);
+                Alert.alert('Error', 'Failed to open external link');
+            }
+        }
     };
 
     return (
@@ -291,8 +319,15 @@ const Earn = () => {
 
                         <ScrollView showsVerticalScrollIndicator={false}>
                             <Text style={styles.modalTitle}>{selectedJob?.title}</Text>
-                            <View style={styles.modalBadge}>
-                                <Text style={styles.modalBadgeText}>{selectedJob?.difficulty}</Text>
+                            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                                <View style={styles.modalBadge}>
+                                    <Text style={styles.modalBadgeText}>{selectedJob?.difficulty}</Text>
+                                </View>
+                                {selectedJob?.source === 'onlinejobs.ph' && (
+                                    <View style={[styles.modalBadge, { backgroundColor: '#4CAF50' }]}>
+                                        <Text style={styles.modalBadgeText}>OnlineJobs.ph</Text>
+                                    </View>
+                                )}
                             </View>
 
                             <Text style={styles.modalSectionTitle}>About</Text>
@@ -311,8 +346,17 @@ const Earn = () => {
                             <Text style={styles.modalText}>{selectedJob?.howToStart}</Text>
                         </ScrollView>
 
+                        {selectedJob?.source === 'onlinejobs.ph' && selectedJob?.externalUrl ? (
+                            <TouchableOpacity
+                                style={[styles.closeButton, { backgroundColor: '#4CAF50' }]}
+                                onPress={() => handleApplyJob(selectedJob)}
+                            >
+                                <Text style={styles.closeButtonText}>Apply on OnlineJobs.ph</Text>
+                            </TouchableOpacity>
+                        ) : null}
+
                         <TouchableOpacity
-                            style={styles.closeButton}
+                            style={[styles.closeButton, selectedJob?.source === 'onlinejobs.ph' && { backgroundColor: '#433DA3', marginTop: 8 }]}
                             onPress={() => setJobModalVisible(false)}
                         >
                             <Text style={styles.closeButtonText}>Close</Text>
@@ -344,6 +388,32 @@ const Earn = () => {
                 {user && user.role === 'admin' && (
                     <AdminJobPanel jobs={jobs} onRefresh={loadJobs} />
                 )}
+
+                {/* Category Tabs */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginTop: verticalScale(16), marginBottom: verticalScale(12) }}
+                    contentContainerStyle={{ paddingRight: 16 }}
+                >
+                    {['All', 'Virtual Assistant', 'Freelance/Remote', 'Part-time'].map((category) => (
+                        <TouchableOpacity
+                            key={category}
+                            style={[
+                                styles.categoryTab,
+                                selectedCategory === category && styles.categoryTabActive
+                            ]}
+                            onPress={() => setSelectedCategory(category)}
+                        >
+                            <Text style={[
+                                styles.categoryTabText,
+                                selectedCategory === category && styles.categoryTabTextActive
+                            ]}>
+                                {category}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
 
                 {/* Jobs Section */}
                 <View style={styles.sectionHeader}>

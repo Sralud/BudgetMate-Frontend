@@ -40,7 +40,10 @@ router.post("/", adminMiddleware, async (req, res) => {
             tags,
             fullDescription,
             requirements,
-            howToStart
+            howToStart,
+            source,
+            category,
+            externalUrl
         } = req.body;
 
         // Validation
@@ -61,6 +64,9 @@ router.post("/", adminMiddleware, async (req, res) => {
             fullDescription,
             requirements: requirements || [],
             howToStart,
+            source: source || 'internal',
+            category: category || 'Other',
+            externalUrl: externalUrl || '',
             createdBy: req.user._id,
         });
 
@@ -92,7 +98,10 @@ router.put("/:id", adminMiddleware, async (req, res) => {
             fullDescription,
             requirements,
             howToStart,
-            isPublished
+            isPublished,
+            source,
+            category,
+            externalUrl
         } = req.body;
 
         // Find and update job
@@ -112,6 +121,9 @@ router.put("/:id", adminMiddleware, async (req, res) => {
         if (requirements !== undefined) job.requirements = requirements;
         if (howToStart !== undefined) job.howToStart = howToStart;
         if (isPublished !== undefined) job.isPublished = isPublished;
+        if (source !== undefined) job.source = source;
+        if (category !== undefined) job.category = category;
+        if (externalUrl !== undefined) job.externalUrl = externalUrl;
 
         await job.save();
 

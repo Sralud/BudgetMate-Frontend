@@ -4,13 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ResourceCard from '../../../src/components/ResourceCard';
 import { fetchArticles } from '../../../src/api/api';
 import { styles, COLORS } from '../../styles/learnStyles';
 
 const Learn = () => {
     const router = useRouter();
-    const { user } = useAuth(); // Use the auth hook
+    const [user, setUser] = useState(null);
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +35,21 @@ const Learn = () => {
         }
     };
 
+    // Load user data from AsyncStorage
+    const loadUser = async () => {
+        try {
+            const userDataStr = await AsyncStorage.getItem('userData');
+            if (userDataStr) {
+                const userData = JSON.parse(userDataStr);
+                setUser(userData);
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    };
+
     useEffect(() => {
+        loadUser();
         loadArticles();
     }, []);
 

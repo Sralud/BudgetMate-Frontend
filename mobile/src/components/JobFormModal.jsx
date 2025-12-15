@@ -38,6 +38,9 @@ const JobFormModal = ({ visible, job, onClose }) => {
         fullDescription: '',
         requirements: '',
         howToStart: '',
+        source: 'internal',
+        category: 'Other',
+        externalUrl: '',
         isPublished: true,
     });
     const [loading, setLoading] = useState(false);
@@ -55,6 +58,9 @@ const JobFormModal = ({ visible, job, onClose }) => {
                 fullDescription: job.fullDescription || '',
                 requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : '',
                 howToStart: job.howToStart || '',
+                source: job.source || 'internal',
+                category: job.category || 'Other',
+                externalUrl: job.externalUrl || '',
                 isPublished: job.isPublished !== undefined ? job.isPublished : true,
             });
         } else {
@@ -69,6 +75,9 @@ const JobFormModal = ({ visible, job, onClose }) => {
                 fullDescription: '',
                 requirements: '',
                 howToStart: '',
+                source: 'internal',
+                category: 'Other',
+                externalUrl: '',
                 isPublished: true,
             });
         }
@@ -94,6 +103,9 @@ const JobFormModal = ({ visible, job, onClose }) => {
                 fullDescription: formData.fullDescription.trim(),
                 requirements: formData.requirements.split('\n').map(req => req.trim()).filter(req => req),
                 howToStart: formData.howToStart.trim(),
+                source: formData.source,
+                category: formData.category,
+                externalUrl: formData.externalUrl.trim(),
                 isPublished: formData.isPublished,
             };
 
@@ -244,6 +256,83 @@ const JobFormModal = ({ visible, job, onClose }) => {
                             multiline
                             numberOfLines={4}
                         />
+
+                        {/* Source */}
+                        <Text style={styles.inputLabel}>Source</Text>
+                        <View style={styles.difficultyContainer}>
+                            {['internal', 'onlinejobs.ph'].map((src) => (
+                                <TouchableOpacity
+                                    key={src}
+                                    style={[
+                                        styles.difficultyBtn,
+                                        formData.source === src && styles.difficultyBtnActive
+                                    ]}
+                                    onPress={() => updateField('source', src)}
+                                >
+                                    <Text style={[
+                                        styles.difficultyText,
+                                        formData.source === src && styles.difficultyTextActive
+                                    ]}>
+                                        {src === 'internal' ? 'Internal' : 'OnlineJobs.ph'}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* Category */}
+                        <Text style={styles.inputLabel}>Category</Text>
+                        <View style={styles.difficultyContainer}>
+                            {['Virtual Assistant', 'Freelance/Remote'].map((cat) => (
+                                <TouchableOpacity
+                                    key={cat}
+                                    style={[
+                                        styles.difficultyBtn,
+                                        formData.category === cat && styles.difficultyBtnActive
+                                    ]}
+                                    onPress={() => updateField('category', cat)}
+                                >
+                                    <Text style={[
+                                        styles.difficultyText,
+                                        formData.category === cat && styles.difficultyTextActive
+                                    ]}>
+                                        {cat}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <View style={styles.difficultyContainer}>
+                            {['Part-time', 'Other'].map((cat) => (
+                                <TouchableOpacity
+                                    key={cat}
+                                    style={[
+                                        styles.difficultyBtn,
+                                        formData.category === cat && styles.difficultyBtnActive
+                                    ]}
+                                    onPress={() => updateField('category', cat)}
+                                >
+                                    <Text style={[
+                                        styles.difficultyText,
+                                        formData.category === cat && styles.difficultyTextActive
+                                    ]}>
+                                        {cat}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* External URL - only show for OnlineJobs.ph */}
+                        {formData.source === 'onlinejobs.ph' && (
+                            <>
+                                <Text style={styles.inputLabel}>External URL (OnlineJobs.ph link)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="https://www.onlinejobs.ph/..."
+                                    placeholderTextColor={COLORS.textSecondary}
+                                    value={formData.externalUrl}
+                                    onChangeText={(val) => updateField('externalUrl', val)}
+                                />
+                            </>
+                        )}
 
                         {/* How to Start */}
                         <Text style={styles.inputLabel}>How to Start</Text>

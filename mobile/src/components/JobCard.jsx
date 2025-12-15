@@ -13,6 +13,13 @@ const COLORS = {
 const JobCard = ({ job, onPress, style }) => {
     return (
         <View style={[styles.card, style]}>
+            {/* OnlineJobs.ph Source Badge */}
+            {job.source === 'onlinejobs.ph' && (
+                <View style={styles.sourceBadge}>
+                    <Text style={styles.sourceBadgeText}>OnlineJobs.ph</Text>
+                </View>
+            )}
+
             <View style={styles.badge}>
                 <Text style={styles.badgeText}>{job.difficulty}</Text>
             </View>
@@ -49,6 +56,19 @@ const styles = StyleSheet.create({
         padding: scale(16),
         borderRadius: moderateScale(24),
         marginRight: scale(16),
+    },
+    sourceBadge: {
+        backgroundColor: '#4CAF50', // Green for OnlineJobs.ph
+        alignSelf: 'flex-start',
+        paddingHorizontal: scale(10),
+        paddingVertical: verticalScale(4),
+        borderRadius: moderateScale(10),
+        marginBottom: verticalScale(8),
+    },
+    sourceBadgeText: {
+        fontFamily: 'Poppins-Bold',
+        fontSize: moderateScale(9),
+        color: '#FFF',
     },
     badge: {
         backgroundColor: COLORS.yellow,

@@ -63,6 +63,30 @@ export const styles = StyleSheet.create({
         paddingRight: scale(20),
     },
 
+    /** CATEGORY TABS */
+    categoryTab: {
+        paddingHorizontal: scale(16),
+        paddingVertical: verticalScale(10),
+        borderRadius: moderateScale(20),
+        backgroundColor: '#1F1C3E',
+        marginRight: scale(10),
+        borderWidth: 1,
+        borderColor: COLORS.cardBg,
+    },
+    categoryTabActive: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    categoryTabText: {
+        fontSize: moderateScale(13),
+        fontFamily: 'Poppins-Medium',
+        color: COLORS.textSecondary,
+    },
+    categoryTabTextActive: {
+        color: COLORS.text,
+        fontFamily: 'Poppins-Bold',
+    },
+
     /** EARNINGS */
     earningsContainer: {
         marginTop: verticalScale(30),

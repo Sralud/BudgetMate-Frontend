@@ -1,16 +1,17 @@
-// backend/seedJobs.js
-// Run this script to populate the database with initial job postings
-// Usage: node seedJobs.js
+// Script to seed jobs to your Render backend
+// This will add 15 curated job listings (3 internal + 12 OnlineJobs.ph)
 
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const Job = require("./models/Job");
-const User = require("./models/User");
+const axios = require('axios');
 
-dotenv.config();
+const RENDER_BACKEND_URL = 'https://budgetmate-backend-ti71.onrender.com';
 
-const INITIAL_JOBS = [
-    // Internal Jobs (existing)
+// Admin credentials
+const ADMIN_EMAIL = 'admin@budgetmate.com';
+const ADMIN_PASSWORD = 'admin123';
+
+// All 15 job listings (3 internal + 12 OnlineJobs.ph)
+const initialJobs = [
+    // Internal Jobs
     {
         title: 'Freelance Writing',
         description: 'Write articles for blogs and publications',
@@ -323,45 +324,73 @@ const INITIAL_JOBS = [
     }
 ];
 
-async function seedJobs() {
+async function seedJobsToRender() {
     try {
-        // Connect to MongoDB
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log("✅ Connected to MongoDB");
+        console.log('🚀 Starting job seeding to Render backend...\n');
+        console.log('Step 1: Logging in as admin...');
 
-        // Find an admin user to assign as creator
-        const adminUser = await User.findOne({ role: 'admin' });
+        // Login to get auth token
+        const loginResponse = await axios.post(
+            `${RENDER_BACKEND_URL}/api/auth/login`,
+            {
+                email: ADMIN_EMAIL,
+                password: ADMIN_PASSWORD
+            }
+        );
 
-        if (!adminUser) {
-            console.log("⚠️  No admin user found. Please create an admin user first.");
-            console.log("You can manually set a user's role to 'admin' in MongoDB.");
-            process.exit(1);
+        const token = loginResponse.data.token;
+        console.log('✅ Logged in successfully!\n');
+
+        console.log(`Step 2: Creating ${initialJobs.length} job listings...`);
+        console.log('   - 3 Internal jobs');
+        console.log('   - 12 OnlineJobs.ph jobs\n');
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Create each job
+        for (const job of initialJobs) {
+            try {
+                await axios.post(
+                    `${RENDER_BACKEND_URL}/api/jobs`,
+                    job,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+                successCount++;
+                const badge = job.source === 'onlinejobs.ph' ? '🟢' : '🔵';
+                console.log(`  ${badge} Created: ${job.title}`);
+            } catch (error) {
+                errorCount++;
+                console.error(`  ❌ Failed: ${job.title} - ${error.response?.data?.message || error.message}`);
+            }
         }
 
-        console.log(`✅ Found admin user: ${adminUser.email}`);
+        console.log(`\n✅ Done!`);
+        console.log(`Successfully created: ${successCount} jobs`);
+        if (errorCount > 0) {
+            console.log(`Failed: ${errorCount} jobs`);
+        }
 
-        // Clear existing jobs (optional - comment out if you want to keep existing jobs)
-        await Job.deleteMany({});
-        console.log("🗑️  Cleared existing jobs");
+        console.log('\n📱 Next steps:');
+        console.log('   1. Refresh your mobile app (shake device and tap "Reload")');
+        console.log('   2. Navigate to the Earn tab');
+        console.log('   3. You should see all 15 jobs with category filters!');
 
-        // Create jobs with admin as creator
-        const jobsWithCreator = INITIAL_JOBS.map(job => ({
-            ...job,
-            createdBy: adminUser._id
-        }));
-
-        const createdJobs = await Job.insertMany(jobsWithCreator);
-        console.log(`✅ Successfully seeded ${createdJobs.length} jobs`);
-
-        createdJobs.forEach((job, index) => {
-            console.log(`   ${index + 1}. ${job.title}`);
-        });
-
-        process.exit(0);
     } catch (error) {
-        console.error("❌ Error seeding jobs:", error);
-        process.exit(1);
+        if (error.response) {
+            console.error('❌ Error:', error.response.data.message);
+            console.error('Status:', error.response.status);
+        } else if (error.request) {
+            console.error('❌ Network error: Could not reach the Render backend');
+            console.error('Make sure the backend URL is correct:', RENDER_BACKEND_URL);
+        } else {
+            console.error('❌ Error:', error.message);
+        }
     }
 }
 
-seedJobs();
+seedJobsToRender();
