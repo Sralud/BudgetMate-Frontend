@@ -1,4 +1,5 @@
 // backend/models/Job.js
+// Updated: Added source, category, and externalUrl fields for OnlineJobs.ph integration
 const mongoose = require("mongoose");
 
 const jobSchema = new mongoose.Schema(
