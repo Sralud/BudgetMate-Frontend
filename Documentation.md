@@ -1,12 +1,5 @@
-# BudgetMate - Project Criteria Documentation
-
-**Student Name:** [Your Name]  
-**Project:** BudgetMate - Personal Finance Management Application  
-**Date:** December 17, 2025  
-**Course:** Mobile Application Development
-
+# BudgetMate - Documentation
 ---
-
 ## Table of Contents
 
 1. [Criteria 1: System Functionalities](#criteria-1-system-functionalities)
@@ -17,7 +10,7 @@
 
 ---
 
-## Criteria 1: System Functionalities
+## 1: System Functionalities
 
 ### Overview
 BudgetMate is a comprehensive personal finance management mobile application built with React Native (Expo) and Node.js/Express backend with MongoDB database. The application targets Gen Z users (18-30 years old) who are beginning their financial journey.
@@ -278,7 +271,7 @@ BudgetMate is a comprehensive personal finance management mobile application bui
 
 ---
 
-## Criteria 2: CRUD Operations
+## 2: CRUD Operations
 
 ### Overview
 All CRUD (Create, Read, Update, Delete) operations are fully implemented across all major features. Each operation is tested and functional.
@@ -473,7 +466,7 @@ router.delete("/:id", auth, async (req, res) => {
 
 ---
 
-## Criteria 3: Data Collections and Model Design
+## 3: Data Collections and Model Design
 
 ### Database Overview
 
@@ -771,7 +764,7 @@ Posts (1) ──→ (Many) Comments (embedded)
 
 ---
 
-## Criteria 4: Security and Validation
+## 4: Security and Validation
 
 ### Authentication & Authorization
 
