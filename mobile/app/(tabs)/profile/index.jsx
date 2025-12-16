@@ -9,6 +9,7 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { api } from '../../../src/api/api';
 import { styles, COLORS } from '../../styles/profileStyles';
 import { getUserAvatar } from '../../../src/utils/avatar';
+import EmergencyFundModal from '../../../src/components/ui/EmergencyFundModal';
 
 const MenuItem = ({ icon, label, value, onPress, isDestructive = false }) => (
   <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
@@ -28,6 +29,7 @@ export default function Profile() {
   const [email, setEmail] = useState('');
   const [avatarSeed, setAvatarSeed] = useState('');
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [emergencyFundModalVisible, setEmergencyFundModalVisible] = useState(false);
   const router = useRouter();
 
   const [budgetData, setBudgetData] = useState(null);
@@ -129,22 +131,22 @@ export default function Profile() {
   };
 
   const handleEmergencyFundClick = () => {
-    Alert.alert(
-      'Emergency Fund',
-      `Current Progress: ${emergencyProgress}%\nSaved: ₱${emergencyFundSaved.toLocaleString()}\nTarget: ₱${emergencyFundTarget.toLocaleString()}`,
-      [
-        { text: 'Close', style: 'cancel' },
-        {
-          text: 'Update Target',
-          onPress: () => router.push('/budget/EditBudget')
-        }
-      ]
-    );
+    setEmergencyFundModalVisible(true);
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar style="light" backgroundColor={COLORS.background} translucent={false} />
+
+      {/* Emergency Fund Modal */}
+      <EmergencyFundModal
+        visible={emergencyFundModalVisible}
+        onClose={() => setEmergencyFundModalVisible(false)}
+        emergencyFundSaved={emergencyFundSaved}
+        emergencyFundTarget={emergencyFundTarget}
+        emergencyProgress={emergencyProgress}
+        onEditGoal={() => router.push('/budget/EditBudget')}
+      />
 
       {/* Custom Logout Modal */}
       <Modal
