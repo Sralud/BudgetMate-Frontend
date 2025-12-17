@@ -16,22 +16,25 @@ const PostDetails = () => {
     const [commentText, setCommentText] = useState('');
     const [loading, setLoading] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [userRole, setUserRole] = useState('user');
+    const [editingCommentId, setEditingCommentId] = useState(null);
 
     useEffect(() => {
-        loadUserId();
+        loadUserData();
     }, []);
 
-    const loadUserId = async () => {
+    const loadUserData = async () => {
         try {
             const userData = await AsyncStorage.getItem('userData');
             if (userData) {
-                const { id } = JSON.parse(userData);
+                const { id, role } = JSON.parse(userData);
                 setCurrentUserId(id);
+                setUserRole(role || 'user');
             } else if (global.userId) {
                 setCurrentUserId(global.userId);
             }
         } catch (error) {
-            console.error('Error loading user ID:', error);
+            console.error('Error loading user data:', error);
         }
     };
 
@@ -55,18 +58,95 @@ const PostDetails = () => {
 
         setLoading(true);
         try {
-            const response = await api.post(`/api/posts/${post._id}/comment`, {
-                text: commentText.trim()
-            });
-            setPost(response.data);
+            if (editingCommentId) {
+                // Update existing comment
+                const response = await api.put(`/api/posts/${post._id}/comment/${editingCommentId}`, {
+                    text: commentText.trim()
+                });
+                setPost(response.data);
+                Alert.alert('Success', 'Comment updated');
+            } else {
+                // Create new comment
+                const response = await api.post(`/api/posts/${post._id}/comment`, {
+                    text: commentText.trim()
+                });
+                setPost(response.data);
+            }
+
             setCommentText('');
-            // Keyboard.dismiss(); // Optional
+            setEditingCommentId(null);
         } catch (error) {
-            console.error('Error posting comment:', error);
-            Alert.alert('Error', 'Failed to post comment');
+            console.error('Error submitting comment:', error);
+            Alert.alert('Error', 'Failed to submit comment');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDeletePost = () => {
+        Alert.alert(
+            'Delete Post',
+            'Are you sure you want to delete this post?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await api.delete(`/api/posts/${post._id}`);
+                            Alert.alert('Deleted', 'Post deleted successfully', [
+                                { text: 'OK', onPress: () => router.push('/(tabs)/community') }
+                            ]);
+                        } catch (error) {
+                            console.error('Error deleting post:', error);
+                            Alert.alert('Error', 'Failed to delete post');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleEditPost = () => {
+        router.push({
+            pathname: '/CreatePost',
+            params: { post: JSON.stringify(post) }
+        });
+    };
+
+    const handleDeleteComment = (commentId) => {
+        Alert.alert(
+            'Delete Comment',
+            'Are you sure you want to delete this comment?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const response = await api.delete(`/api/posts/${post._id}/comment/${commentId}`);
+                            setPost(response.data);
+                            Alert.alert('Deleted', 'Comment deleted successfully');
+                        } catch (error) {
+                            console.error('Error deleting comment:', error);
+                            Alert.alert('Error', 'Failed to delete comment');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleStartEditComment = (comment) => {
+        setCommentText(comment.text);
+        setEditingCommentId(comment._id);
+    };
+
+    const handleCancelEditComment = () => {
+        setCommentText('');
+        setEditingCommentId(null);
     };
 
     if (!post) {
@@ -78,6 +158,8 @@ const PostDetails = () => {
     }
 
     const isLiked = post.likes && currentUserId && post.likes.includes(currentUserId);
+    const isPostOwner = currentUserId && post.user?._id === currentUserId;
+    const canDeletePost = isPostOwner || userRole === 'admin';
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -89,7 +171,21 @@ const PostDetails = () => {
                     <MaterialIcons name="arrow-back" size={24} color={COLORS.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>Post Details</Text>
-                <View style={{ width: 24 }} />
+
+                {canDeletePost ? (
+                    <View style={{ flexDirection: 'row' }}>
+                        {isPostOwner && (
+                            <TouchableOpacity onPress={handleEditPost} style={{ padding: 8 }}>
+                                <MaterialIcons name="edit" size={24} color={COLORS.primary} />
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={handleDeletePost} style={{ padding: 8 }}>
+                            <MaterialIcons name="delete" size={24} color={COLORS.accent} />
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={{ width: 24 }} />
+                )}
             </View>
 
             <KeyboardAvoidingView
@@ -147,29 +243,56 @@ const PostDetails = () => {
                     <Text style={styles.sectionTitle}>Comments</Text>
 
                     {post.comments && post.comments.length > 0 ? (
-                        post.comments.map((comment, index) => (
-                            <View key={index} style={styles.commentCard}>
-                                <View style={styles.commentHeader}>
-                                    <View style={styles.commentAvatar}>
-                                        <Image
-                                            source={{
-                                                uri: getUserAvatar({
-                                                    avatarSeed: comment.user?.avatarSeed,
-                                                    email: comment.user?.email,
-                                                    name: comment.user?.name || comment.user?.username
-                                                })
-                                            }}
-                                            style={styles.avatarImage}
-                                            resizeMode="cover"
-                                        />
+                        post.comments.map((comment, index) => {
+                            const isCommentOwner = currentUserId && comment.user?._id === currentUserId;
+                            const canDeleteComment = isCommentOwner || userRole === 'admin';
+
+                            return (
+                                <View key={index} style={styles.commentCard}>
+                                    <View style={styles.commentHeader}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                            <View style={styles.commentAvatar}>
+                                                <Image
+                                                    source={{
+                                                        uri: getUserAvatar({
+                                                            avatarSeed: comment.user?.avatarSeed,
+                                                            email: comment.user?.email,
+                                                            name: comment.user?.name || comment.user?.username
+                                                        })
+                                                    }}
+                                                    style={styles.avatarImage}
+                                                    resizeMode="cover"
+                                                />
+                                            </View>
+                                            <Text style={styles.commentUser}>
+                                                {comment.user ? (comment.user.username || comment.user.name) : 'User'}
+                                            </Text>
+                                        </View>
+
+                                        {/* Comment Actions */}
+                                        <View style={{ flexDirection: 'row' }}>
+                                            {isCommentOwner && (
+                                                <TouchableOpacity
+                                                    onPress={() => handleStartEditComment(comment)}
+                                                    style={{ padding: 4, marginRight: 8 }}
+                                                >
+                                                    <MaterialIcons name="edit" size={18} color={COLORS.textSecondary} />
+                                                </TouchableOpacity>
+                                            )}
+                                            {canDeleteComment && (
+                                                <TouchableOpacity
+                                                    onPress={() => handleDeleteComment(comment._id)}
+                                                    style={{ padding: 4 }}
+                                                >
+                                                    <MaterialIcons name="delete" size={18} color={COLORS.accent} />
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
                                     </View>
-                                    <Text style={styles.commentUser}>
-                                        {comment.user ? (comment.user.username || comment.user.name) : 'User'}
-                                    </Text>
+                                    <Text style={styles.commentText}>{comment.text}</Text>
                                 </View>
-                                <Text style={styles.commentText}>{comment.text}</Text>
-                            </View>
-                        ))
+                            );
+                        })
                     ) : (
                         <Text style={styles.emptyComments}>No comments yet. Be the first!</Text>
                     )}
@@ -177,9 +300,14 @@ const PostDetails = () => {
 
                 {/* Comment Input */}
                 <View style={styles.footer}>
+                    {editingCommentId && (
+                        <TouchableOpacity onPress={handleCancelEditComment} style={{ marginRight: 10 }}>
+                            <MaterialIcons name="close" size={24} color={COLORS.accent} />
+                        </TouchableOpacity>
+                    )}
                     <TextInput
                         style={styles.input}
-                        placeholder="Write a comment..."
+                        placeholder={editingCommentId ? "Update your comment..." : "Write a comment..."}
                         placeholderTextColor={COLORS.textSecondary}
                         value={commentText}
                         onChangeText={setCommentText}
@@ -190,7 +318,7 @@ const PostDetails = () => {
                         onPress={submitComment}
                         disabled={!commentText.trim() || loading}
                     >
-                        <MaterialIcons name="send" size={24} color="#FFF" />
+                        <MaterialIcons name={editingCommentId ? "check" : "send"} size={24} color="#FFF" />
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>

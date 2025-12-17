@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { scale, verticalScale, moderateScale } from '../src/utils/responsive';
 import { api } from '../src/api/api';
@@ -28,11 +28,22 @@ const CATEGORIES = [
 
 export default function CreatePost() {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [category, setCategory] = useState('');
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
+    const isEditMode = !!params.post;
+    const initialPost = params.post ? JSON.parse(params.post) : null;
+
+    useEffect(() => {
+        if (isEditMode && initialPost) {
+            setTitle(initialPost.title);
+            setContent(initialPost.content);
+            setCategory(initialPost.category);
+        }
+    }, [isEditMode]);
 
     const handleSubmit = async () => {
         setErrors({});
@@ -50,21 +61,35 @@ export default function CreatePost() {
         setLoading(true);
 
         try {
-            await api.post('/api/posts', {
-                title,
-                content,
-                category,
-            });
+            if (isEditMode) {
+                await api.put(`/api/posts/${initialPost._id}`, {
+                    title,
+                    content,
+                    category,
+                });
+                Alert.alert('Success', 'Post updated successfully!', [
+                    {
+                        text: 'OK',
+                        onPress: () => router.push('/(tabs)/community'), // Go back to community to refresh or just back
+                    },
+                ]);
+            } else {
+                await api.post('/api/posts', {
+                    title,
+                    content,
+                    category,
+                });
 
-            Alert.alert('Success', 'Post created successfully!', [
-                {
-                    text: 'OK',
-                    onPress: () => router.back(),
-                },
-            ]);
+                Alert.alert('Success', 'Post created successfully!', [
+                    {
+                        text: 'OK',
+                        onPress: () => router.back(),
+                    },
+                ]);
+            }
         } catch (error) {
-            console.error('Error creating post:', error);
-            Alert.alert('Error', error.response?.data?.msg || 'Failed to create post');
+            console.error('Error saving post:', error);
+            Alert.alert('Error', error.response?.data?.msg || 'Failed to save post');
         } finally {
             setLoading(false);
         }
@@ -79,14 +104,14 @@ export default function CreatePost() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <MaterialIcons name="close" size={moderateScale(24)} color={COLORS.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Create Post</Text>
+                <Text style={styles.headerTitle}>{isEditMode ? 'Edit Post' : 'Create Post'}</Text>
                 <TouchableOpacity
                     onPress={handleSubmit}
                     disabled={loading}
                     style={styles.postButton}
                 >
                     <Text style={[styles.postButtonText, loading && styles.postButtonTextDisabled]}>
-                        {loading ? 'Posting...' : 'Post'}
+                        {loading ? 'Saving...' : (isEditMode ? 'Update' : 'Post')}
                     </Text>
                 </TouchableOpacity>
             </View>

@@ -9,6 +9,7 @@ import { api } from '../../../src/api/api';
 import { styles, COLORS } from '../../styles/communityStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserAvatar } from '../../../src/utils/avatar';
+import * as Clipboard from 'expo-clipboard';
 
 const CATEGORIES = [
     { id: 'all', label: 'All', color: COLORS.yellow },
@@ -76,7 +77,7 @@ const Community = () => {
             );
         } catch (error) {
             console.error('Error liking post:', error);
-            Alert.alert('Error', 'Failed to like post');
+            // Optional: Don't show alert for every like error to avoid spamming user if it's just connectivity
         }
     };
 
@@ -113,20 +114,17 @@ const Community = () => {
         }
     };
 
-    const handleShare = (post) => {
-        Alert.alert(
-            'Share Post',
-            `Share "${post.title}" with your friends?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Share',
-                    onPress: () => {
-                        Alert.alert('Shared!', 'Post shared successfully!');
-                    }
-                }
-            ]
-        );
+    const handleShare = async (post) => {
+        try {
+            // Create a shareable link with post ID
+            // Format: budgetmate://community/post/{postId}
+            const shareLink = `budgetmate://community/post/${post._id}`;
+            await Clipboard.setStringAsync(shareLink);
+            Alert.alert('Link Copied!', 'Post link copied to clipboard. Share it with your friends!');
+        } catch (error) {
+            console.error('Error sharing:', error);
+            Alert.alert('Error', 'Failed to copy link to clipboard');
+        }
     };
 
     const handlePostClick = (post) => {
